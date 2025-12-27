@@ -1,0 +1,6 @@
+# 链接器优化（Windows）
+[target.x86_64-pc-windows-msvc]
+rustflags = [
+    "-C", "link-arg=/MERGE:.rdata=.text",  # 合并只读数据段
+    "-C", "target-cpu=x86-64-v2",          # 使用更现代的指令集
+]

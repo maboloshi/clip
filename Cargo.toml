@@ -1,0 +1,20 @@
+[package]
+name = "clip"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# 使用更轻量的 chardet 替代 charset-normalizer-rs
+chardet = "0.2"
+
+[profile.release]
+# 优化选项
+opt-level = "z"          # 或 "s"，有时 "s" 比 "z" 更小
+lto = "fat"              # 使用 "fat" 而不是 true，更激进的 LTO
+codegen-units = 1        # 最大优化，但编译时间长
+panic = "abort"          # 移除 panic 展开代码
+strip = true             # 移除符号表
+
+# 减小 std 库大小
+[profile.release.package."*"]
+opt-level = "z"
