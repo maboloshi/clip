@@ -1,7 +1,14 @@
 [package]
 name = "clip"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
+authors = ["沙漠之子 <7850715+maboloshi@users.noreply.github.com>"]
+description = "A lightweight Windows CLI tool to copy text file contents to clipboard with automatic encoding detection"
+repository = "https://github.com/maboloshi/clip"
+license = "MIT"
+readme = "README.md"
+keywords = ["clipboard", "encoding", "windows", "cli", "utf8"]
+categories = ["command-line-utilities", "text-processing"]
 
 [dependencies]
 # 使用更轻量的 chardet 替代 charset-normalizer-rs

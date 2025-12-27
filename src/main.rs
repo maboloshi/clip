@@ -3,6 +3,23 @@ use std::env;
 use std::fs;
 use std::io::Read;
 
+// 条件输出宏
+macro_rules! println_info {
+    ($silent:expr, $($arg:tt)*) => {
+        if !$silent {
+            println!($($arg)*);
+        }
+    };
+}
+
+macro_rules! eprintln_info {
+    ($silent:expr, $($arg:tt)*) => {
+        if !$silent {
+            eprintln!($($arg)*);
+        }
+    };
+}
+
 // Windows API 剪贴板操作
 #[cfg(windows)]
 mod clipboard {
@@ -91,23 +108,23 @@ mod encoding {
     // 编码名称到 Windows 代码页的映射
     fn get_codepage(encoding: &str) -> Option<u32> {
         let mut map = HashMap::new();
-        
+
         // UTF 系列
         map.insert("utf-8", 65001);
         map.insert("utf8", 65001);
         map.insert("utf-16le", 1200);
         map.insert("utf-16be", 1201);
-        
+
         // 简体中文
         map.insert("gbk", 936);
         map.insert("gb2312", 936);
         map.insert("gb18030", 54936);
         map.insert("cp936", 936);
-        
+
         // 繁体中文
         map.insert("big5", 950);
         map.insert("cp950", 950);
-        
+
         // 日文
         map.insert("shift-jis", 932);
         map.insert("shift_jis", 932);
@@ -115,20 +132,20 @@ mod encoding {
         map.insert("cp932", 932);
         map.insert("euc-jp", 51932);
         map.insert("iso-2022-jp", 50220);
-        
+
         // 韩文
         map.insert("euc-kr", 51949);
         map.insert("cp949", 949);
         map.insert("ks_c_5601-1987", 949);
-        
+
         // 西欧
         map.insert("windows-1252", 1252);
         map.insert("iso-8859-1", 28591);
         map.insert("latin1", 28591);
-        
+
         // 其他
         map.insert("ascii", 20127);
-        
+
         map.get(encoding.to_lowercase().as_str()).copied()
     }
 
@@ -181,7 +198,7 @@ mod encoding {
             return Err("UTF-16 文件为空".into());
         }
 
-        let is_le = encoding.to_lowercase().contains("le") 
+        let is_le = encoding.to_lowercase().contains("le")
             || (!encoding.to_lowercase().contains("be"));
 
         // 处理奇数长度（补0）
@@ -205,7 +222,7 @@ mod encoding {
 }
 
 // 检测并读取文件编码
-fn read_file_with_encoding(path: &str) -> Result<String, String> {
+fn read_file_with_encoding(path: &str, silent: bool) -> Result<String, String> {
     let mut file = fs::File::open(path).map_err(|e| format!("无法打开文件: {}", e))?;
     let mut buffer = Vec::new();
     file.read_to_end(&mut buffer)
@@ -224,21 +241,21 @@ fn read_file_with_encoding(path: &str) -> Result<String, String> {
 
     // 使用 chardet 检测编码
     let encoding_name = if let Some(enc) = detected_encoding {
-        println!("✓ 检测到 BOM: {}", enc);
+        println_info!(silent, "✓ 检测到 BOM: {}", enc);
         enc.split_whitespace().next().unwrap().to_string()
     } else {
-        println!("⧗ 正在检测文件编码...");
-        
+        println_info!(silent, "⧗ 正在检测文件编码...");
+
         let result = detect(bytes);
         let charset = result.0;
         let confidence = result.1;
         let _language = result.2;
-        
+
         // 转换 charset 名称到标准编码名
         let encoding = charset2encoding(&charset);
-        
-        println!("✓ 检测到编码: {} (置信度: {:.0}%)", encoding, confidence * 100.0);
-        
+
+        println_info!(silent, "✓ 检测到编码: {} (置信度: {:.0}%)", encoding, confidence * 100.0);
+
         encoding.to_string()
     };
 
@@ -249,29 +266,58 @@ fn read_file_with_encoding(path: &str) -> Result<String, String> {
 fn main() {
     let args: Vec<String> = env::args().collect();
 
-    if args.len() != 2 {
-        eprintln!("用法: {} <文件路径>", args[0]);
-        eprintln!("示例: {} text.txt", args[0]);
-        eprintln!();
-        eprintln!("功能:");
-        eprintln!("  - 自动检测文件编码 (使用 chardet)");
-        eprintln!("  - 支持 UTF-8, GBK, Shift-JIS, Big5, EUC-KR 等");
-        eprintln!("  - 显示检测置信度");
-        std::process::exit(1);
+    // 检查是否启用静默模式
+    let silent = args.iter().any(|arg| arg == "-s" || arg == "--silent");
+
+    // 检查是否请求帮助
+    let show_help = args.iter().any(|arg| arg == "-h" || arg == "--help");
+
+    // 过滤掉标志参数，获取文件路径
+    let file_args: Vec<&String> = args.iter()
+        .skip(1)
+        .filter(|arg| !arg.starts_with('-'))
+        .collect();
+
+    // 主动请求帮助或缺少参数
+    if show_help || file_args.is_empty() {
+        println_info!(silent, "Clip - 文本文件到剪贴板工具");
+        println_info!(silent, "版本 0.1.1");
+        println_info!(silent, "");
+        println_info!(silent, "用法:");
+        println_info!(silent, "  {} [选项] <文件路径>", args[0]);
+        println_info!(silent, "");
+        println_info!(silent, "示例:");
+        println_info!(silent, "  {} text.txt", args[0]);
+        println_info!(silent, "  {} -s text.txt  (静默模式)", args[0]);
+        println_info!(silent, "");
+        println_info!(silent, "选项:");
+        println_info!(silent, "  -s, --silent    静默模式，不输出任何信息");
+        println_info!(silent, "  -h, --help      显示此帮助信息");
+        println_info!(silent, "");
+        println_info!(silent, "功能:");
+        println_info!(silent, "  - 自动检测文件编码 (使用 chardet)");
+        println_info!(silent, "  - 支持 UTF-8, GBK, Shift-JIS, Big5, EUC-KR 等");
+        println_info!(silent, "  - 显示检测置信度");
+
+        // 主动请求帮助 → 退出码 0
+        // 缺少参数 → 退出码 1
+        std::process::exit(if show_help { 0 } else { 1 });
     }
 
-    let file_path = &args[1];
+    let file_path = file_args[0];
 
-    match read_file_with_encoding(file_path) {
+    match read_file_with_encoding(file_path, silent) {
         Ok(content) => match clipboard::set_text(&content) {
-            Ok(_) => println!("✓ 已复制到剪贴板 ({} 字符)", content.len()),
+            Ok(_) => {
+                println_info!(silent, "✓ 已复制到剪贴板 ({} 字符)", content.len());
+            }
             Err(e) => {
-                eprintln!("✗ 复制失败: {}", e);
+                eprintln_info!(silent, "✗ 复制失败: {}", e);
                 std::process::exit(1);
             }
         },
         Err(e) => {
-            eprintln!("✗ 处理失败: {}", e);
+            eprintln_info!(silent, "✗ 处理失败: {}", e);
             std::process::exit(1);
         }
     }
