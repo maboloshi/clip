@@ -36,7 +36,7 @@ Windows 系统自带了 `clip.exe` 命令，但本项目提供了更强大的功
 
 ```bash
 # 克隆项目
-git clone <repository-url>
+git clone https://github.com/maboloshi/clip.git
 cd clip
 
 # 编译 Release 版本
