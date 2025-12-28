@@ -10,7 +10,7 @@ checksum = "1a48563284b67c003ba0fb7243c87fab68885e1532c605704228a80238512e31"
 
 [[package]]
 name = "clip"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "chardet",
 ]
