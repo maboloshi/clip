@@ -14,6 +14,21 @@ categories = ["command-line-utilities", "text-processing"]
 # 使用更轻量的 chardet 替代 charset-normalizer-rs
 chardet = "0.2"
 
+[features]
+default = []
+gui = []  # 无窗口版本
+
+# 控制台版本（终端使用）
+[[bin]]
+name = "clip"
+path = "src/main.rs"
+
+# GUI 版本（无窗口闪现，适合快捷键调用）
+[[bin]]
+name = "clipw"
+required-features = ["gui"]
+path = "src/main.rs"
+
 [profile.release]
 # 优化选项
 opt-level = "z"          # 或 "s"，有时 "s" 比 "z" 更小

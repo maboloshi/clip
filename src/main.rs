@@ -1,3 +1,5 @@
+// GUI 版本：使用 windows 子系统，阻止控制台窗口
+#![cfg_attr(all(windows, feature = "gui"), windows_subsystem = "windows")]
 use chardet::{charset2encoding, detect};
 use std::env;
 use std::fs;
@@ -267,7 +269,11 @@ fn main() {
     let args: Vec<String> = env::args().collect();
 
     // 检查是否启用静默模式
-    let silent = args.iter().any(|arg| arg == "-s" || arg == "--silent");
+    let silent = if cfg!(feature = "gui") {
+        true // GUI 版本默认静默
+    } else {
+        args.iter().any(|arg| arg == "-s" || arg == "--silent")
+    };
 
     // 检查是否请求帮助
     let show_help = args.iter().any(|arg| arg == "-h" || arg == "--help");
